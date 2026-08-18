@@ -1,0 +1,45 @@
+name: Automated Order Exception Analysis
+
+on:
+  workflow_dispatch:
+
+  push:
+    paths:
+      - "AI_Order_Exception_Analyst.ipynb"
+
+  schedule:
+    - cron: "0 8 * * *"
+
+jobs:
+  analyse-orders:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas numpy matplotlib jupyter nbconvert ipykernel
+
+      - name: Run Order Exception Analyst
+        run: |
+          jupyter nbconvert \
+            --to notebook \
+            --execute AI_Order_Exception_Analyst.ipynb \
+            --output AI_Order_Exception_Analyst_Automated.ipynb \
+            --ExecutePreprocessor.timeout=600
+
+      - name: Upload operational outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: order-exception-analysis
+          path: |
+            AI_Order_Exception_Analyst_Automated.ipynb
+            daily_order_exception_queue.csv
